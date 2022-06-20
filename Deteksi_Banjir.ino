@@ -3,16 +3,20 @@
 #include <PubSubClient.h>
 #include <SimpleDHT.h>
 
-const char *ssid = "POCO X3 NFC";            // sesuaikan dengan username wifi
-const char *password = "lumajang";        // sesuaikan dengan password wifi
+#define RED_LED D4
+#define GREEN_LED D5
+#define BLUE_LED D6
+
+const char *ssid = "POCO X3 NFC";              // sesuaikan dengan username wifi
+const char *password = "lumajang";             // sesuaikan dengan password wifi
 const char *mqtt_server = "broker.hivemq.com"; // isikan server broker
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 SimpleDHT11 dht11(D6);
-#define triggerPin  D8
-#define echoPin     D7
+#define triggerPin D8
+#define echoPin D7
 
 long now = millis();
 long lastMeasure = 0;
@@ -59,6 +63,9 @@ void reconnect()
 void setup()
 {
   Serial.begin(115200);
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BLUE_LED, OUTPUT);
   Serial.println("Mqtt Node-RED");
   setup_wifi();
   client.setServer(mqtt_server, 1883);
@@ -93,10 +100,13 @@ void loop()
       delay(1000);
       return;
     }
-    if(temperature >= 26 && temperature <= 30){
+    if (temperature >= 26 && temperature <= 30)
+    {
       statusSuhu = "Normal";
-    }else{
-      statusSuhu = "Dingin"; 
+    }
+    else
+    {
+      statusSuhu = "Dingin";
     }
 
     static char temperatureTemp[7];
@@ -108,25 +118,46 @@ void loop()
 
     long duration, jarak;
     digitalWrite(triggerPin, LOW);
-    delayMicroseconds(2); 
+    delayMicroseconds(2);
     digitalWrite(triggerPin, HIGH);
-    delayMicroseconds(10); 
+    delayMicroseconds(10);
     digitalWrite(triggerPin, LOW);
     duration = pulseIn(echoPin, HIGH);
-    jarak = (duration/2) / 29.1;
+    jarak = (duration / 2) / 29.1;
     Serial.println("jarak :");
     delay(100);
-    
+
+    if (jarak > 0 && jarak <= 40)
+    {
+      digitalWrite(RED_LED, HIGH);
+      digitalWrite(GREEN_LED, LOW);
+      digitalWrite(BLUE_LED, LOW);
+      delay(1000);
+    }
+    else if (jarak > 41 && jarak < 80)
+    {
+      digitalWrite(RED_LED, LOW);
+      digitalWrite(GREEN_LED, LOW);
+      digitalWrite(BLUE_LED, HIGH);
+      delay(1000);
+    }
+    else
+    {
+      digitalWrite(RED_LED, LOW);
+      digitalWrite(GREEN_LED, HIGH);
+      digitalWrite(BLUE_LED, LOW);
+      delay(1000);
+    }
+
     Serial.println(temperatureTemp);
     Serial.println(kelembapanTemp);
-    
+
     dtostrf(jarak, 4, 2, ketinggianTemp);
     Serial.print(ketinggianTemp);
     Serial.println("cm");
 
-    client.publish("room/suhuu", temperatureTemp); 
-    client.publish("room/ketinggian", ketinggianTemp); 
-    client.publish("room/kelembapan", kelembapanTemp); 
-
+    client.publish("room/suhuu", temperatureTemp);
+    client.publish("room/ketinggian", ketinggianTemp);
+    client.publish("room/kelembapan", kelembapanTemp);
   }
 }
