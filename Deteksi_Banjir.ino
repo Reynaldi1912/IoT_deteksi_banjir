@@ -60,6 +60,82 @@ void reconnect()
   }
 }
 
+void callback(String topic, byte *message, unsigned int length)
+{
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
+  for (int i = 0; i < length; i++)
+  {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+  if (topic == "msg.red")
+  {
+    if (messageTemp == "on")
+    {
+      redOn();
+    }
+    else if (messageTemp == "off")
+    {
+      redOff();
+    }
+  }
+  if (topic == "msg.blue")
+  {
+    if (messageTemp == "on")
+    {
+      blueOn();
+    }
+    else if (messageTemp == "off")
+    {
+      blueOff();
+    }
+  }
+  if (topic == "msg.red")
+  {
+    if (messageTemp == "on")
+    {
+      greenOn();
+    }
+    else if (messageTemp == "off")
+    {
+      greenOff();
+    }
+  }
+  Serial.println();
+}
+
+void redOn()
+{
+  digitalWrite(RED_LED, HIGH);
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(BLUE_LED, LOW);
+  delay(1000);
+}
+
+void blueOn()
+{
+  digitalWrite(RED_LED, LOW);
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(BLUE_LED, HIGH);
+  delay(1000);
+}
+
+void greenOn()
+{
+  digitalWrite(RED_LED, LOW);
+  digitalWrite(GREEN_LED, HIGH);
+  digitalWrite(BLUE_LED, LOW);
+  delay(1000);
+}
+
+void redOff() {digitalWrite(RED_LED, LOW);}
+void blueOff() {digitalWrite(BLUE_LED, LOW);}
+void greenOff() {digitalWrite(GREEN_LED, LOW);}
+
 void setup()
 {
   Serial.begin(115200);
@@ -69,6 +145,7 @@ void setup()
   Serial.println("Mqtt Node-RED");
   setup_wifi();
   client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
   pinMode(triggerPin, OUTPUT);
   pinMode(echoPin, INPUT);
 }
@@ -129,24 +206,15 @@ void loop()
 
     if (jarak > 0 && jarak <= 40)
     {
-      digitalWrite(RED_LED, HIGH);
-      digitalWrite(GREEN_LED, LOW);
-      digitalWrite(BLUE_LED, LOW);
-      delay(1000);
+      redOn();
     }
     else if (jarak > 41 && jarak < 80)
     {
-      digitalWrite(RED_LED, LOW);
-      digitalWrite(GREEN_LED, LOW);
-      digitalWrite(BLUE_LED, HIGH);
-      delay(1000);
+      blueOn();
     }
     else
     {
-      digitalWrite(RED_LED, LOW);
-      digitalWrite(GREEN_LED, HIGH);
-      digitalWrite(BLUE_LED, LOW);
-      delay(1000);
+      greenOn();
     }
 
     Serial.println(temperatureTemp);
